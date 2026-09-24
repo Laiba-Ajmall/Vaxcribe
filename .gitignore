@@ -1,0 +1,99 @@
+# ==============================
+# Vaxcribe - Git Ignore
+# ==============================
+
+# ------------------------------
+# Node / Next.js
+# ------------------------------
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+
+# Next.js environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ------------------------------
+# Python
+# ------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ------------------------------
+# Environment / Secrets
+# ------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------
+# Database
+# ------------------------------
+*.sqlite
+*.sqlite3
+*.db
+
+# ------------------------------
+# Vaxcribe processing files
+# ------------------------------
+uploads/
+processed/
+temp/
+tmp/
+audio/
+transcripts_generated/
+
+# Large media files
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.mp3
+*.wav
+*.m4a
+*.flac
+
+# ------------------------------
+# IDE / Editor
+# ------------------------------
+.vscode/
+.idea/
+
+# ------------------------------
+# OS files
+# ------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------
+# Logs
+# ------------------------------
+*.log
+logs/
+
+# ------------------------------
+# Coverage
+# ------------------------------
+.coverage
+htmlcov/
+.coverage.*
