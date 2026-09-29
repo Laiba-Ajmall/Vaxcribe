@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export default function Home() {
   const [backendStatus, setBackendStatus] = useState("Checking...");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [dragActive, setDragActive] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export default function Home() {
 
   function handleDrop(event) {
     event.preventDefault();
-    setDragActive(false);
 
     const file = event.dataTransfer.files?.[0];
 
@@ -51,72 +49,69 @@ export default function Home() {
     fileInputRef.current?.click();
   }
 
-  return (
-    <main className="min-h-screen overflow-hidden bg-[#F8F7F2] text-[#142235]">
-      {/* BACKGROUND SHAPES */}
-      <div className="pointer-events-none absolute right-[-70px] top-[120px] h-[300px] w-[300px] rounded-bl-full bg-[#DDE9E4]" />
-      <div className="pointer-events-none absolute bottom-[600px] left-[-120px] h-[260px] w-[260px] rounded-tr-full bg-[#D7E5DF]" />
-      <div className="pointer-events-none absolute bottom-[380px] right-[-100px] h-[280px] w-[280px] rounded-tl-full bg-[#EEE5D5]" />
+  function handleUrlSubmit() {
+    if (!videoUrl.trim()) return;
 
-      {/* NAVBAR */}
-      <header className="relative z-20 border-b border-[#E1E2DC] bg-[#F8F7F2]">
-        <div className="mx-auto flex h-[86px] max-w-[1280px] items-center justify-between px-6 lg:px-10">
-          {/* LOGO */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-[48px] w-[48px] items-center justify-center rounded-[15px] bg-[#2E7062]">
-              <div className="relative flex items-center gap-[3px]">
-                <span className="h-4 w-[3px] rounded-full bg-white" />
-                <span className="h-6 w-[3px] rounded-full bg-white" />
-                <span className="h-3 w-[3px] rounded-full bg-white" />
-                <span className="ml-1 block h-0 w-0 border-y-[9px] border-l-[13px] border-y-transparent border-l-white" />
+    console.log("Video URL:", videoUrl);
+  }
+
+  return (
+    <main className="min-h-screen bg-[#F8F7F2] text-[#142235]">
+      <header className="border-b border-[#DFE1DC] bg-[#F8F7F2]">
+        <div className="mx-auto flex h-[82px] max-w-[1280px] items-center justify-between px-6 lg:px-10">
+          <a href="#" className="flex items-center gap-3">
+            <div className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-[#2E6B5D]">
+              <div className="flex items-center gap-[3px]">
+                <span className="h-4 w-[2px] rounded-full bg-white" />
+                <span className="h-6 w-[2px] rounded-full bg-white" />
+                <span className="h-3 w-[2px] rounded-full bg-white" />
+                <span className="ml-1 block h-0 w-0 border-y-[7px] border-l-[10px] border-y-transparent border-l-white" />
               </div>
             </div>
 
-            <span className="text-[25px] font-bold tracking-[-0.8px] text-[#142235]">
+            <span className="text-[24px] font-bold tracking-[-0.7px] text-[#142235]">
               Vaxcribe
             </span>
-          </div>
+          </a>
 
-          {/* NAVIGATION */}
-          <nav className="hidden items-center gap-9 md:flex">
+          <nav className="hidden items-center gap-8 md:flex">
             <a
               href="#features"
-              className="text-[15px] text-[#304256] transition hover:text-[#2E7062]"
+              className="text-[15px] text-[#405064] transition hover:text-[#2E6B5D]"
             >
               Features
             </a>
 
             <a
               href="#how-it-works"
-              className="text-[15px] text-[#304256] transition hover:text-[#2E7062]"
+              className="text-[15px] text-[#405064] transition hover:text-[#2E6B5D]"
             >
               How it works
             </a>
 
             <a
               href="#formats"
-              className="text-[15px] text-[#304256] transition hover:text-[#2E7062]"
+              className="text-[15px] text-[#405064] transition hover:text-[#2E6B5D]"
             >
               Supported formats
             </a>
 
             <a
               href="#why-vaxcribe"
-              className="text-[15px] text-[#304256] transition hover:text-[#2E7062]"
+              className="text-[15px] text-[#405064] transition hover:text-[#2E6B5D]"
             >
               Why Vaxcribe
             </a>
           </nav>
 
-          {/* ACTIONS */}
           <div className="flex items-center gap-3">
-            <button className="hidden rounded-[10px] border border-[#9EB9B1] px-6 py-3 text-[15px] font-semibold text-[#315E55] transition hover:bg-[#EDF3EF] sm:block">
+            <button className="hidden rounded-[8px] border border-[#9DB7B0] bg-transparent px-6 py-2.5 text-[15px] font-semibold text-[#315E55] transition hover:bg-[#EEF3F0] sm:block">
               Sign in
             </button>
 
             <button
               onClick={handleBrowse}
-              className="rounded-[10px] bg-[#2E7062] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[#24594D]"
+              className="rounded-[8px] bg-[#2E6B5D] px-6 py-2.5 text-[15px] font-semibold text-white transition hover:bg-[#255A4E]"
             >
               Get started
               <span className="ml-2">→</span>
@@ -125,159 +120,130 @@ export default function Home() {
         </div>
       </header>
 
-      {/* HERO */}
-      <section className="relative z-10">
-        <div className="mx-auto grid max-w-[1280px] items-center gap-14 px-6 pb-24 pt-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-10 lg:pt-24">
-          {/* LEFT */}
-          <div className="max-w-[560px]">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#397366]">
-              Video transcription
-            </p>
+      <section className="border-b border-[#DFE1DC]">
+        <div className="mx-auto max-w-[1280px] px-6 pb-20 pt-20 lg:px-10 lg:pb-24 lg:pt-24">
+          <div className="grid items-center gap-16 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#55796F]">
+                Video transcription
+              </p>
 
-            <h1 className="mt-5 text-[54px] font-bold leading-[1.04] tracking-[-2.6px] text-[#10233D] sm:text-[64px] lg:text-[70px]">
-              Transcribe
-              <br />
-              video
-              <br />
-              <span className="text-[#2E7062]">to text.</span>
-            </h1>
+              <h1 className="max-w-[590px] text-[52px] font-bold leading-[1.02] tracking-[-2.2px] text-[#142235] sm:text-[60px]">
+                Turn your video
+                <br />
+                into <span className="text-[#2E6B5D]">text.</span>
+              </h1>
 
-            <p className="mt-7 max-w-[500px] text-[19px] leading-[1.65] text-[#586878]">
-              Turn spoken content from your videos into clear text you can
-              read, search, edit, and reuse.
-            </p>
+              <p className="mt-6 max-w-[570px] text-[18px] leading-8 text-[#596878]">
+                Convert spoken content from your videos into clear text you
+                can read, search, edit, and reuse.
+              </p>
 
-            {/* SIMPLE FEATURES */}
-            <div
-              id="features"
-              className="mt-10 border-t border-[#D8DDD8]"
-            >
-              <FeatureRow
-                title="Accurate transcription"
-                description="Convert spoken content into readable text."
-              />
+              <div className="mt-9 grid max-w-[560px] gap-5 border-t border-[#D9DDD8] pt-7">
+                <SimpleFeature
+                  title="Accurate transcription"
+                  description="Turn spoken content into written text."
+                />
 
-              <FeatureRow
-                title="Common video & audio formats"
-                description="Upload the files you already have."
-              />
+                <SimpleFeature
+                  title="Easy to upload"
+                  description="Drop a video or choose a file from your computer."
+                />
 
-              <FeatureRow
-                title="Searchable text"
-                description="Find the words and sections you need."
-              />
-
-              <FeatureRow
-                title="Ready to reuse"
-                description="Review, copy, edit, and use your transcript."
-              />
+                <SimpleFeature
+                  title="Search and reuse"
+                  description="Find the words you need without replaying the entire video."
+                />
+              </div>
             </div>
-          </div>
 
-          {/* RIGHT — TRANSCRIPTION TOOL */}
-          <div className="relative lg:-translate-y-10">
-            <div className="bg-white p-2 shadow-[0_20px_70px_rgba(32,54,47,0.09)]">
-              <div
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  setDragActive(true);
-                }}
-                onDragLeave={() => setDragActive(false)}
-                onDrop={handleDrop}
-                className={`min-h-[500px] border px-8 py-12 transition sm:px-12 ${
-                  dragActive
-                    ? "border-[#2E7062] bg-[#F2F8F5]"
-                    : "border-[#D8DEDA] bg-[#FCFCFA]"
-                }`}
-              >
-                {/* TOOL LABEL */}
-                <p className="text-center text-[12px] font-semibold uppercase tracking-[0.18em] text-[#397366]">
-                  Upload
-                </p>
-
-                {/* UPLOAD TITLE */}
-                <h2 className="mt-8 text-center text-[27px] font-bold tracking-[-0.8px] text-[#172B42]">
-                  {selectedFile
-                    ? selectedFile.name
-                    : "Drop your video here"}
-                </h2>
-
-                <p className="mt-3 text-center text-[16px] text-[#71808A]">
-                  {selectedFile
-                    ? "Ready to upload"
-                    : "or choose a file from your computer"}
-                </p>
-
-                {/* BUTTON */}
-                <button
-                  onClick={handleBrowse}
-                  className="mt-8 flex w-full items-center justify-center gap-3 bg-[#2E7062] py-[18px] text-[17px] font-semibold text-white transition hover:bg-[#255C50]"
+            <div className="w-full">
+              <div className="border border-[#D5DAD5] bg-white p-5">
+                <div
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleDrop}
+                  className="border border-[#D8DED9] bg-[#FCFCFA] px-6 py-12 sm:px-10"
                 >
-                  <svg
-                    width="21"
-                    height="21"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 16V4" />
-                    <path d="m7 9 5-5 5 5" />
-                    <path d="M5 20h14" />
-                  </svg>
+                  <p className="text-center text-[12px] font-semibold uppercase tracking-[0.16em] text-[#5C8177]">
+                    Upload
+                  </p>
 
-                  {selectedFile ? "Choose another file" : "Choose video"}
-                </button>
+                  <h2 className="mt-6 text-center text-[28px] font-bold tracking-[-0.8px] text-[#172B40]">
+                    {selectedFile ? selectedFile.name : "Drop your video here"}
+                  </h2>
 
-                {/* FORMATS */}
-                <p className="mt-4 text-center text-[14px] text-[#7C888C]">
-                  MP4 · MOV · WEBM · AVI · MP3 · WAV
-                </p>
-
-                {/* DIVIDER */}
-                <div className="my-9 flex items-center gap-4">
-                  <div className="h-px flex-1 bg-[#DDE1DE]" />
-
-                  <span className="text-[13px] uppercase tracking-[0.08em] text-[#8A9292]">
-                    or
-                  </span>
-
-                  <div className="h-px flex-1 bg-[#DDE1DE]" />
-                </div>
-
-                {/* URL */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Paste video URL"
-                    className="h-[56px] min-w-0 flex-1 border border-[#D8DEDA] bg-white px-4 text-[15px] text-[#203449] outline-none placeholder:text-[#9AA2A3] focus:border-[#6F9F93]"
-                  />
+                  <p className="mt-3 text-center text-[16px] text-[#697782]">
+                    or choose a file from your computer
+                  </p>
 
                   <button
-                    aria-label="Submit video URL"
-                    className="flex h-[56px] w-[56px] shrink-0 items-center justify-center bg-[#2E7062] text-white transition hover:bg-[#255C50]"
+                    onClick={handleBrowse}
+                    className="mt-7 flex w-full items-center justify-center gap-3 rounded-[6px] bg-[#2E6B5D] py-[17px] text-[16px] font-semibold text-white transition hover:bg-[#255A4E]"
                   >
-                    <span className="text-[24px]">→</span>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 16V4" />
+                      <path d="m7 9 5-5 5 5" />
+                      <path d="M5 20h14" />
+                    </svg>
+
+                    {selectedFile ? "Choose another file" : "Choose video"}
                   </button>
-                </div>
 
-                {/* BACKEND STATUS */}
-                <div className="mt-7 flex items-center justify-center gap-2 text-[13px] text-[#788486]">
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      backendStatus === "Backend unavailable"
-                        ? "bg-[#C96C5D]"
-                        : "bg-[#55947E]"
-                    }`}
-                  />
+                  <p className="mt-4 text-center text-[14px] text-[#7B8589]">
+                    MP4 · MOV · WEBM · AVI · MP3 · WAV
+                  </p>
 
-                  <span>
-                    {backendStatus === "Backend unavailable"
-                      ? "Service temporarily unavailable"
-                      : "Ready to transcribe"}
-                  </span>
+                  <div className="my-8 flex items-center gap-4">
+                    <div className="h-px flex-1 bg-[#DDE1DD]" />
+
+                    <span className="text-[13px] uppercase tracking-[0.08em] text-[#89918F]">
+                      or
+                    </span>
+
+                    <div className="h-px flex-1 bg-[#DDE1DD]" />
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      type="text"
+                      value={videoUrl}
+                      onChange={(event) => setVideoUrl(event.target.value)}
+                      placeholder="Paste video URL"
+                      className="h-[52px] flex-1 rounded-[6px] border border-[#D5DCD7] bg-white px-4 text-[15px] text-[#203449] outline-none placeholder:text-[#969E9E] focus:border-[#6C9B90]"
+                    />
+
+                    <button
+                      onClick={handleUrlSubmit}
+                      className="h-[52px] rounded-[6px] bg-[#2E6B5D] px-6 text-[15px] font-semibold text-white transition hover:bg-[#255A4E]"
+                    >
+                      Continue →
+                    </button>
+                  </div>
+
+                  <div className="mt-7 flex items-center justify-center gap-2 text-[13px] text-[#788482]">
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        backendStatus === "Backend unavailable"
+                          ? "bg-[#B9685D]"
+                          : "bg-[#4C8C77]"
+                      }`}
+                    />
+
+                    <span>
+                      {backendStatus === "Backend unavailable"
+                        ? "Service unavailable"
+                        : "Ready to transcribe"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -285,164 +251,226 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      <section id="formats" className="border-b border-[#DFE1DC] bg-white">
+        <div className="mx-auto max-w-[1280px] px-6 py-14 lg:px-10">
+          <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#55796F]">
+                Supported formats
+              </p>
+
+              <h2 className="mt-2 text-[27px] font-bold tracking-[-0.7px] text-[#172B40]">
+                Use the files you already have.
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {["MP4", "MOV", "WEBM", "AVI", "MP3", "WAV"].map((format) => (
+                <span
+                  key={format}
+                  className="border border-[#D1DAD5] bg-[#F8FAF8] px-4 py-2 text-[14px] font-medium text-[#405F58]"
+                >
+                  {format}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section
         id="how-it-works"
-        className="relative border-t border-[#E0E2DC] bg-[#F3F2EC]"
+        className="border-b border-[#DFE1DC] bg-[#F8F7F2]"
       >
-        <div className="mx-auto max-w-[1280px] px-6 py-24 lg:px-10">
-          <div className="max-w-[700px]">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#397366]">
+        <div className="mx-auto max-w-[1280px] px-6 py-20 lg:px-10">
+          <div className="max-w-[650px]">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#55796F]">
               How it works
             </p>
 
-            <h2 className="mt-5 text-[42px] font-bold leading-[1.1] tracking-[-1.8px] text-[#142235] sm:text-[50px]">
-              From video to text,
-              <br />
-              in three simple steps.
+            <h2 className="mt-3 text-[40px] font-bold leading-[1.1] tracking-[-1.5px] text-[#142235] sm:text-[46px]">
+              Three simple steps.
             </h2>
 
-            <p className="mt-5 max-w-[650px] text-[18px] leading-8 text-[#69757D]">
-              Upload your recording, let Vaxcribe handle the transcription,
-              then work with the text instead of replaying the video.
+            <p className="mt-4 text-[17px] leading-7 text-[#64717A]">
+              Upload your recording, let Vaxcribe process the speech, and work
+              with the resulting text.
             </p>
           </div>
 
-          <div className="mt-16 grid border-t border-[#D5DAD5] md:grid-cols-3">
+          <div className="mt-14 grid border-y border-[#D9DDD8] md:grid-cols-3">
             <ProcessStep
               number="01"
+              icon="upload"
               title="Upload"
               description="Choose a video or audio file from your device."
             />
 
             <ProcessStep
               number="02"
+              icon="transcribe"
               title="Transcribe"
-              description="Vaxcribe turns the spoken content into written text."
+              description="Vaxcribe processes the spoken content and creates a transcript."
             />
 
             <ProcessStep
               number="03"
-              title="Use the text"
-              description="Read, search, copy, edit, and reuse your transcript."
+              icon="text"
+              title="Use your text"
+              description="Read, search, copy, edit, and reuse the finished transcript."
             />
           </div>
         </div>
       </section>
 
-      {/* SUPPORTED FORMATS */}
-      <section
-        id="formats"
-        className="border-t border-[#E0E2DC] bg-[#F8F7F2]"
-      >
-        <div className="mx-auto max-w-[1280px] px-6 py-24 lg:px-10">
-          <div className="grid gap-12 md:grid-cols-[1fr_0.8fr] md:items-center">
+      <section id="features" className="border-b border-[#DFE1DC] bg-white">
+        <div className="mx-auto max-w-[1280px] px-6 py-20 lg:px-10">
+          <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
-              <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#397366]">
-                Supported formats
+              <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#55796F]">
+                What you can do
               </p>
 
-              <h2 className="mt-5 max-w-[650px] text-[42px] font-bold leading-[1.1] tracking-[-1.7px] text-[#142235] sm:text-[48px]">
-                Use the files you already have.
+              <h2 className="mt-3 max-w-[480px] text-[40px] font-bold leading-[1.1] tracking-[-1.4px] text-[#142235]">
+                Get more from the words in your videos.
+              </h2>
+            </div>
+
+            <div className="grid border-t border-[#D9DDD8] sm:grid-cols-2">
+              <FeatureBlock
+                icon="search"
+                title="Search"
+                description="Find specific words and sections in your transcript."
+              />
+
+              <FeatureBlock
+                icon="edit"
+                title="Edit"
+                description="Review and clean up the text after transcription."
+              />
+
+              <FeatureBlock
+                icon="copy"
+                title="Copy"
+                description="Take the text you need and use it somewhere else."
+              />
+
+              <FeatureBlock
+                icon="download"
+                title="Download"
+                description="Save your finished transcript for later use."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#DFE1DC] bg-[#F3F4EF]">
+        <div className="mx-auto max-w-[1280px] px-6 py-20 lg:px-10">
+          <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#55796F]">
+            Built for real recordings
+          </p>
+
+          <h2 className="mt-3 max-w-[700px] text-[40px] font-bold leading-[1.1] tracking-[-1.4px] text-[#142235]">
+            From lectures to meetings, interviews, and recordings.
+          </h2>
+
+          <div className="mt-10 flex flex-wrap gap-3">
+            {[
+              "Lectures",
+              "Meetings",
+              "Interviews",
+              "Podcasts",
+              "Presentations",
+              "Research",
+              "Recordings",
+              "Videos",
+            ].map((item) => (
+              <span
+                key={item}
+                className="border border-[#CBD5D0] bg-white px-5 py-3 text-[15px] text-[#405C56]"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="why-vaxcribe" className="border-b border-[#DFE1DC] bg-[#214943]">
+        <div className="mx-auto max-w-[1280px] px-6 py-20 lg:px-10">
+          <div className="grid gap-14 lg:grid-cols-[0.85fr_1.15fr]">
+            <div>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#B8D2CB]">
+                Why Vaxcribe
+              </p>
+
+              <h2 className="mt-4 max-w-[500px] text-[40px] font-bold leading-[1.1] tracking-[-1.4px] text-white sm:text-[46px]">
+                Stop replaying the same video to find one sentence.
               </h2>
 
-              <p className="mt-5 max-w-[620px] text-[18px] leading-8 text-[#69747B]">
-                Upload common video and audio formats without changing the way
-                you work.
+              <p className="mt-5 max-w-[500px] text-[17px] leading-7 text-[#D2E0DC]">
+                Vaxcribe turns spoken information into text you can actually
+                work with.
               </p>
+
+              <button
+                onClick={handleBrowse}
+                className="mt-7 rounded-[6px] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#214943] transition hover:bg-[#EDF2EF]"
+              >
+                Get started →
+              </button>
             </div>
 
-            <div className="flex flex-wrap gap-3 md:justify-end">
-              {["MP4", "MOV", "WEBM", "AVI", "MP3", "WAV"].map(
-                (format) => (
-                  <span
-                    key={format}
-                    className="border border-[#C8D6D0] bg-white px-5 py-3 text-[15px] font-semibold text-[#315E55]"
-                  >
-                    {format}
-                  </span>
-                )
-              )}
+            <div className="border-t border-white/20">
+              <WhyRow
+                title="Readable"
+                description="Turn spoken information into text you can comfortably read."
+              />
+
+              <WhyRow
+                title="Searchable"
+                description="Find important words and sections without replaying everything."
+              />
+
+              <WhyRow
+                title="Reusable"
+                description="Copy, review, edit, and use the finished transcript wherever you need it."
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* WHY VAXCRIBE */}
-      <section
-        id="why-vaxcribe"
-        className="relative overflow-hidden bg-[#214943]"
-      >
-        <div className="mx-auto grid max-w-[1280px] gap-14 px-6 py-24 lg:grid-cols-[0.9fr_1.1fr] lg:px-10">
-          {/* LEFT */}
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#B7D5CD]">
-              Why Vaxcribe
-            </p>
-
-            <h2 className="mt-5 max-w-[560px] text-[43px] font-bold leading-[1.08] tracking-[-1.8px] text-white sm:text-[52px]">
-              Spend less time
-              <br />
-              replaying videos.
-            </h2>
-
-            <p className="mt-6 max-w-[540px] text-[18px] leading-[1.7] text-[#D1E0DC]">
-              Turn spoken content into text that you can actually work with.
-              Find information, review what was said, and reuse the transcript
-              whenever you need it.
-            </p>
-
-            <button
-              onClick={handleBrowse}
-              className="mt-8 bg-white px-6 py-3.5 text-[15px] font-semibold text-[#214943] transition hover:bg-[#EDF4F1]"
-            >
-              Get started →
-            </button>
-          </div>
-
-          {/* RIGHT */}
-          <div className="border-t border-white/20">
-            <WhyItem
-              title="Readable"
-              description="Turn spoken information into text you can comfortably read."
-            />
-
-            <WhyItem
-              title="Searchable"
-              description="Find important words and sections without replaying everything."
-            />
-
-            <WhyItem
-              title="Reusable"
-              description="Copy, review, edit, and reuse your finished transcript."
-              last
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-[#E0E2DC] bg-[#F8F7F2]">
+      <footer className="bg-[#F8F7F2]">
         <div className="mx-auto flex max-w-[1280px] flex-col justify-between gap-5 px-6 py-7 text-[14px] text-[#718087] sm:flex-row sm:items-center lg:px-10">
           <p>© 2026 Vaxcribe. All rights reserved.</p>
 
           <div className="flex gap-6">
-            <a href="#" className="transition hover:text-[#2E7062]">
+            <a
+              href="#"
+              className="transition hover:text-[#2E6B5D]"
+            >
               Privacy
             </a>
 
-            <a href="#" className="transition hover:text-[#2E7062]">
+            <a
+              href="#"
+              className="transition hover:text-[#2E6B5D]"
+            >
               Terms
             </a>
 
-            <a href="#" className="transition hover:text-[#2E7062]">
+            <a
+              href="#"
+              className="transition hover:text-[#2E6B5D]"
+            >
               Contact
             </a>
           </div>
         </div>
       </footer>
 
-      {/* HIDDEN FILE INPUT */}
       <input
         ref={fileInputRef}
         type="file"
@@ -454,55 +482,156 @@ export default function Home() {
   );
 }
 
-/* FEATURE ROW */
-function FeatureRow({ title, description }) {
+function SimpleFeature({ title, description }) {
   return (
-    <div className="flex gap-5 border-b border-[#D8DDD8] py-5">
-      <div className="mt-[7px] h-2.5 w-2.5 shrink-0 rounded-full bg-[#2E7062]" />
+    <div className="grid grid-cols-[170px_1fr] gap-4">
+      <h3 className="text-[15px] font-semibold text-[#203449]">
+        {title}
+      </h3>
 
-      <div>
-        <h3 className="text-[16px] font-semibold text-[#203449]">
-          {title}
-        </h3>
+      <p className="text-[15px] leading-6 text-[#68757C]">
+        {description}
+      </p>
+    </div>
+  );
+}
 
-        <p className="mt-1 text-[15px] leading-6 text-[#69747B]">
-          {description}
-        </p>
+function ProcessStep({ number, icon, title, description }) {
+  return (
+    <div className="border-b border-[#D9DDD8] px-0 py-7 md:border-b-0 md:px-7 md:py-8 md:first:border-r md:last:border-l">
+      <div className="flex items-center justify-between">
+        <div className="flex h-10 w-10 items-center justify-center border border-[#C9D5D0] bg-[#F7FAF8] text-[#2E6B5D]">
+          <SmallIcon type={icon} />
+        </div>
+
+        <span className="text-[12px] font-semibold tracking-[0.14em] text-[#63877D]">
+          {number}
+        </span>
       </div>
-    </div>
-  );
-}
 
-/* PROCESS STEP */
-function ProcessStep({ number, title, description }) {
-  return (
-    <div className="border-b border-[#D5DAD5] py-7 md:border-b-0 md:border-r md:px-7 md:first:pl-0 md:last:border-r-0">
-      <span className="text-[12px] font-semibold tracking-[0.12em] text-[#66867D]">
-        {number}
-      </span>
-
-      <h3 className="mt-5 text-[22px] font-bold text-[#142235]">
+      <h3 className="mt-6 text-[21px] font-bold text-[#172B40]">
         {title}
       </h3>
 
-      <p className="mt-3 max-w-[300px] text-[16px] leading-7 text-[#697278]">
+      <p className="mt-2 max-w-[310px] text-[15px] leading-6 text-[#69767D]">
         {description}
       </p>
     </div>
   );
 }
 
-/* WHY ITEM */
-function WhyItem({ title, description, last = false }) {
+function FeatureBlock({ icon, title, description }) {
   return (
-    <div className={`py-7 ${last ? "" : "border-b border-white/20"}`}>
-      <h3 className="text-[21px] font-semibold text-white">
+    <div className="border-b border-[#D9DDD8] px-0 py-6 sm:px-7 sm:first:border-r">
+      <div className="flex h-9 w-9 items-center justify-center border border-[#C9D5D0] bg-[#F7FAF8] text-[#2E6B5D]">
+        <SmallIcon type={icon} />
+      </div>
+
+      <h3 className="mt-4 text-[19px] font-semibold text-[#172B40]">
         {title}
       </h3>
 
-      <p className="mt-2 max-w-[520px] text-[16px] leading-[1.65] text-[#C8DAD6]">
+      <p className="mt-2 max-w-[340px] text-[15px] leading-6 text-[#69767D]">
         {description}
       </p>
     </div>
   );
+}
+
+function WhyRow({ title, description }) {
+  return (
+    <div className="border-b border-white/20 py-7 last:border-b-0">
+      <h3 className="text-[20px] font-semibold text-white">
+        {title}
+      </h3>
+
+      <p className="mt-2 max-w-[600px] text-[16px] leading-7 text-[#C8D9D5]">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function SmallIcon({ type }) {
+  const commonProps = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
+
+  if (type === "search") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16 16 4 4" />
+      </svg>
+    );
+  }
+
+  if (type === "edit") {
+    return (
+      <svg {...commonProps}>
+        <path d="M4 20h4l10.5-10.5a2.12 2.12 0 0 0-3-3L5 17v3Z" />
+        <path d="m14.5 7.5 3 3" />
+      </svg>
+    );
+  }
+
+  if (type === "copy") {
+    return (
+      <svg {...commonProps}>
+        <rect x="8" y="8" width="11" height="11" rx="1.5" />
+        <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+      </svg>
+    );
+  }
+
+  if (type === "download") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 4v11" />
+        <path d="m7.5 11 4.5 4.5 4.5-4.5" />
+        <path d="M5 20h14" />
+      </svg>
+    );
+  }
+
+  if (type === "upload") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 15V4" />
+        <path d="m7.5 8.5 4.5-4.5 4.5 4.5" />
+        <path d="M5 20h14" />
+      </svg>
+    );
+  }
+
+  if (type === "transcribe") {
+    return (
+      <svg {...commonProps}>
+        <path d="M8 5v14" />
+        <path d="M12 8v8" />
+        <path d="M16 6v12" />
+        <path d="M5 10v4" />
+        <path d="M19 9v6" />
+      </svg>
+    );
+  }
+
+  if (type === "text") {
+    return (
+      <svg {...commonProps}>
+        <path d="M5 5h14" />
+        <path d="M12 5v14" />
+        <path d="M8 19h8" />
+      </svg>
+    );
+  }
+
+  return null;
 }
