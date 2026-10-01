@@ -6,6 +6,8 @@ export default function Home() {
   const [backendStatus, setBackendStatus] = useState("Checking...");
   const [selectedFile, setSelectedFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState("");
+  const [uploadStatus, setUploadStatus] = useState("");
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -30,9 +32,37 @@ export default function Home() {
     checkBackend();
   }, []);
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file) return;
+
     setSelectedFile(file);
+    setUploadStatus("Uploading...");
+    setUploadError("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "File upload failed.");
+      }
+
+      setUploadStatus("File uploaded successfully.");
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadStatus("");
+      setUploadError(error.message || "Unable to upload file.");
+    }
   }
 
   function handleDrop(event) {
@@ -54,6 +84,8 @@ export default function Home() {
 
     console.log("Video URL:", videoUrl);
   }
+
+  const isUploading = uploadStatus === "Uploading...";
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] text-[#142235]">
@@ -111,7 +143,8 @@ export default function Home() {
 
             <button
               onClick={handleBrowse}
-              className="rounded-[8px] bg-[#2E6B5D] px-6 py-2.5 text-[15px] font-semibold text-white transition hover:bg-[#255A4E]"
+              disabled={isUploading}
+              className="rounded-[8px] bg-[#2E6B5D] px-6 py-2.5 text-[15px] font-semibold text-white transition hover:bg-[#255A4E] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Get started
               <span className="ml-2">→</span>
@@ -178,7 +211,8 @@ export default function Home() {
 
                   <button
                     onClick={handleBrowse}
-                    className="mt-7 flex w-full items-center justify-center gap-3 rounded-[6px] bg-[#2E6B5D] py-[17px] text-[16px] font-semibold text-white transition hover:bg-[#255A4E]"
+                    disabled={isUploading}
+                    className="mt-7 flex w-full items-center justify-center gap-3 rounded-[6px] bg-[#2E6B5D] py-[17px] text-[16px] font-semibold text-white transition hover:bg-[#255A4E] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <svg
                       width="20"
@@ -195,12 +229,31 @@ export default function Home() {
                       <path d="M5 20h14" />
                     </svg>
 
-                    {selectedFile ? "Choose another file" : "Choose video"}
+                    {isUploading
+                      ? "Uploading..."
+                      : selectedFile
+                        ? "Choose another file"
+                        : "Choose video"}
                   </button>
 
                   <p className="mt-4 text-center text-[14px] text-[#7B8589]">
                     MP4 · MOV · WEBM · AVI · MP3 · WAV
                   </p>
+
+                  {uploadStatus === "File uploaded successfully." && (
+                    <div className="mt-5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#397260]">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E4F0EB]">
+                        ✓
+                      </span>
+                      File uploaded successfully
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <div className="mt-5 border border-[#E4D2CE] bg-[#FBF3F1] px-4 py-3 text-center text-[14px] text-[#9A5147]">
+                      {uploadError}
+                    </div>
+                  )}
 
                   <div className="my-8 flex items-center gap-4">
                     <div className="h-px flex-1 bg-[#DDE1DD]" />
@@ -397,7 +450,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="why-vaxcribe" className="border-b border-[#DFE1DC] bg-[#214943]">
+      <section
+        id="why-vaxcribe"
+        className="border-b border-[#DFE1DC] bg-[#214943]"
+      >
         <div className="mx-auto max-w-[1280px] px-6 py-20 lg:px-10">
           <div className="grid gap-14 lg:grid-cols-[0.85fr_1.15fr]">
             <div>
@@ -416,7 +472,8 @@ export default function Home() {
 
               <button
                 onClick={handleBrowse}
-                className="mt-7 rounded-[6px] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#214943] transition hover:bg-[#EDF2EF]"
+                disabled={isUploading}
+                className="mt-7 rounded-[6px] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#214943] transition hover:bg-[#EDF2EF] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Get started →
               </button>
@@ -447,24 +504,15 @@ export default function Home() {
           <p>© 2026 Vaxcribe. All rights reserved.</p>
 
           <div className="flex gap-6">
-            <a
-              href="#"
-              className="transition hover:text-[#2E6B5D]"
-            >
+            <a href="#" className="transition hover:text-[#2E6B5D]">
               Privacy
             </a>
 
-            <a
-              href="#"
-              className="transition hover:text-[#2E6B5D]"
-            >
+            <a href="#" className="transition hover:text-[#2E6B5D]">
               Terms
             </a>
 
-            <a
-              href="#"
-              className="transition hover:text-[#2E6B5D]"
-            >
+            <a href="#" className="transition hover:text-[#2E6B5D]">
               Contact
             </a>
           </div>
@@ -476,7 +524,10 @@ export default function Home() {
         type="file"
         accept="video/*,audio/*"
         className="hidden"
-        onChange={(event) => handleFile(event.target.files?.[0])}
+        onChange={(event) => {
+          handleFile(event.target.files?.[0]);
+          event.target.value = "";
+        }}
       />
     </main>
   );
@@ -485,13 +536,9 @@ export default function Home() {
 function SimpleFeature({ title, description }) {
   return (
     <div className="grid grid-cols-[170px_1fr] gap-4">
-      <h3 className="text-[15px] font-semibold text-[#203449]">
-        {title}
-      </h3>
+      <h3 className="text-[15px] font-semibold text-[#203449]">{title}</h3>
 
-      <p className="text-[15px] leading-6 text-[#68757C]">
-        {description}
-      </p>
+      <p className="text-[15px] leading-6 text-[#68757C]">{description}</p>
     </div>
   );
 }
@@ -509,9 +556,7 @@ function ProcessStep({ number, icon, title, description }) {
         </span>
       </div>
 
-      <h3 className="mt-6 text-[21px] font-bold text-[#172B40]">
-        {title}
-      </h3>
+      <h3 className="mt-6 text-[21px] font-bold text-[#172B40]">{title}</h3>
 
       <p className="mt-2 max-w-[310px] text-[15px] leading-6 text-[#69767D]">
         {description}
@@ -541,9 +586,7 @@ function FeatureBlock({ icon, title, description }) {
 function WhyRow({ title, description }) {
   return (
     <div className="border-b border-white/20 py-7 last:border-b-0">
-      <h3 className="text-[20px] font-semibold text-white">
-        {title}
-      </h3>
+      <h3 className="text-[20px] font-semibold text-white">{title}</h3>
 
       <p className="mt-2 max-w-[600px] text-[16px] leading-7 text-[#C8D9D5]">
         {description}
