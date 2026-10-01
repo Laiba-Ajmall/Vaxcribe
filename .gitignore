@@ -54,7 +54,8 @@ ENV/
 # ------------------------------
 # Vaxcribe processing files
 # ------------------------------
-uploads/
+backend/uploads/
+backend/extracted_audio/
 processed/
 temp/
 tmp/

@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,11 +29,28 @@ app.add_middleware(
 
 
 # ---------------------------------------------------------
-# Upload configuration
+# Directory configuration
 # ---------------------------------------------------------
 
-UPLOAD_DIR = Path("uploads")
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+EXTRACTED_AUDIO_DIR = BASE_DIR / "extracted_audio"
+EXTRACTED_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ---------------------------------------------------------
+# FFmpeg configuration
+# ---------------------------------------------------------
+
+FFMPEG_PATH = Path(r"C:\ffmpeg\bin\ffmpeg.exe")
+
+
+# ---------------------------------------------------------
+# Upload configuration
+# ---------------------------------------------------------
 
 ALLOWED_EXTENSIONS = {
     ".mp4",
@@ -160,4 +178,124 @@ async def upload_media(file: UploadFile = File(...)):
         "size": total_size,
         "content_type": file.content_type,
         "status": "uploaded",
+    }
+
+
+# ---------------------------------------------------------
+# Audio extraction
+# ---------------------------------------------------------
+
+@app.post("/api/extract-audio")
+def extract_audio(filename: str):
+    # Make sure the filename cannot escape the uploads directory.
+    safe_filename = Path(filename).name
+
+    if not safe_filename:
+        raise HTTPException(
+            status_code=400,
+            detail="A filename is required.",
+        )
+
+    source_file = UPLOAD_DIR / safe_filename
+
+    if not source_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Uploaded file not found: {safe_filename}",
+        )
+
+    if not source_file.is_file():
+        raise HTTPException(
+            status_code=400,
+            detail="The selected path is not a valid file.",
+        )
+
+    if not FFMPEG_PATH.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "FFmpeg was not found at "
+                "C:\\ffmpeg\\bin\\ffmpeg.exe. "
+                "Please check the FFmpeg installation."
+            ),
+        )
+
+    # Always generate WAV output.
+    output_filename = f"{source_file.stem}.wav"
+    output_file = EXTRACTED_AUDIO_DIR / output_filename
+
+    # If the same audio file already exists, remove it so that
+    # FFmpeg can create a fresh version.
+    if output_file.exists():
+        output_file.unlink()
+
+    command = [
+        str(FFMPEG_PATH),
+        "-y",
+        "-i",
+        str(source_file),
+        "-vn",
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-c:a",
+        "pcm_s16le",
+        str(output_file),
+    ]
+
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=600,
+        )
+
+    except subprocess.TimeoutExpired as error:
+        if output_file.exists():
+            output_file.unlink()
+
+        raise HTTPException(
+            status_code=504,
+            detail="Audio extraction timed out.",
+        ) from error
+
+    except Exception as error:
+        if output_file.exists():
+            output_file.unlink()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Could not start FFmpeg for audio extraction.",
+        ) from error
+
+    if result.returncode != 0:
+        if output_file.exists():
+            output_file.unlink()
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "FFmpeg could not extract audio from this file.",
+                "ffmpeg_error": result.stderr[-2000:],
+            },
+        )
+
+    if not output_file.exists():
+        raise HTTPException(
+            status_code=500,
+            detail="FFmpeg finished, but the audio file was not created.",
+        )
+
+    return {
+        "message": "Audio extracted successfully.",
+        "source_filename": safe_filename,
+        "audio_filename": output_file.name,
+        "audio_path": str(output_file),
+        "size": output_file.stat().st_size,
+        "format": "WAV",
+        "sample_rate": 16000,
+        "channels": 1,
+        "status": "audio_extracted",
     }
