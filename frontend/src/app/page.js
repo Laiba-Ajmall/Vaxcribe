@@ -8,6 +8,10 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState("");
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const [transcript, setTranscript] = useState("");
+  const [segments, setSegments] = useState([]);
+  const [language, setLanguage] = useState("");
+  const [processingComplete, setProcessingComplete] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -38,13 +42,19 @@ export default function Home() {
     setSelectedFile(file);
     setUploadStatus("Uploading...");
     setUploadError("");
+    setTranscript("");
+    setSegments([]);
+    setLanguage("");
+    setProcessingComplete(false);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
+      setUploadStatus("Uploading...");
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/upload`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/process`,
         {
           method: "POST",
           body: formData,
@@ -54,19 +64,32 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "File upload failed.");
+        throw new Error(
+          typeof data.detail === "string"
+            ? data.detail
+            : "File processing failed."
+        );
       }
 
-      setUploadStatus("File uploaded successfully.");
+      setUploadStatus("Transcription complete.");
+      setTranscript(data.transcript || "");
+      setSegments(data.segments || []);
+      setLanguage(data.language || "");
+      setProcessingComplete(true);
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Processing error:", error);
       setUploadStatus("");
-      setUploadError(error.message || "Unable to upload file.");
+      setUploadError(
+        error.message || "Unable to process this file."
+      );
+      setProcessingComplete(false);
     }
   }
 
   function handleDrop(event) {
     event.preventDefault();
+
+    if (isProcessing) return;
 
     const file = event.dataTransfer.files?.[0];
 
@@ -76,6 +99,8 @@ export default function Home() {
   }
 
   function handleBrowse() {
+    if (isProcessing) return;
+
     fileInputRef.current?.click();
   }
 
@@ -85,7 +110,40 @@ export default function Home() {
     console.log("Video URL:", videoUrl);
   }
 
-  const isUploading = uploadStatus === "Uploading...";
+  async function handleCopyTranscript() {
+    if (!transcript) return;
+
+    try {
+      await navigator.clipboard.writeText(transcript);
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
+  }
+
+  function handleDownloadTranscript() {
+    if (!transcript) return;
+
+    const blob = new Blob([transcript], {
+      type: "text/plain;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${selectedFile?.name || "vaxcribe-transcript"}.txt`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  const isProcessing =
+    uploadStatus === "Uploading..." ||
+    uploadStatus === "Processing..." ||
+    uploadStatus === "Transcribing...";
 
   return (
     <main className="min-h-screen bg-[#F8F7F2] text-[#142235]">
@@ -143,7 +201,7 @@ export default function Home() {
 
             <button
               onClick={handleBrowse}
-              disabled={isUploading}
+              disabled={isProcessing}
               className="rounded-[8px] bg-[#2E6B5D] px-6 py-2.5 text-[15px] font-semibold text-white transition hover:bg-[#255A4E] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Get started
@@ -211,7 +269,7 @@ export default function Home() {
 
                   <button
                     onClick={handleBrowse}
-                    disabled={isUploading}
+                    disabled={isProcessing}
                     className="mt-7 flex w-full items-center justify-center gap-3 rounded-[6px] bg-[#2E6B5D] py-[17px] text-[16px] font-semibold text-white transition hover:bg-[#255A4E] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <svg
@@ -229,8 +287,8 @@ export default function Home() {
                       <path d="M5 20h14" />
                     </svg>
 
-                    {isUploading
-                      ? "Uploading..."
+                    {isProcessing
+                      ? "Processing..."
                       : selectedFile
                         ? "Choose another file"
                         : "Choose video"}
@@ -240,12 +298,19 @@ export default function Home() {
                     MP4 · MOV · WEBM · AVI · MP3 · WAV
                   </p>
 
-                  {uploadStatus === "File uploaded successfully." && (
+                  {isProcessing && (
+                    <div className="mt-5 flex items-center justify-center gap-3 text-[14px] font-medium text-[#397260]">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C9DDD6] border-t-[#2E6B5D]" />
+                      Processing your recording and creating the transcript...
+                    </div>
+                  )}
+
+                  {processingComplete && (
                     <div className="mt-5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#397260]">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E4F0EB]">
                         ✓
                       </span>
-                      File uploaded successfully
+                      Transcription completed successfully
                     </div>
                   )}
 
@@ -301,6 +366,81 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {transcript && (
+            <div className="mt-12 border border-[#D5DAD5] bg-white">
+              <div className="flex flex-col gap-4 border-b border-[#D9DDD8] px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+                <div>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#55796F]">
+                    Transcript
+                  </p>
+
+                  <h2 className="mt-1 text-[24px] font-bold tracking-[-0.5px] text-[#172B40]">
+                    {selectedFile?.name || "Your recording"}
+                  </h2>
+
+                  {language && (
+                    <p className="mt-1 text-[13px] text-[#788482]">
+                      Detected language: {language.toUpperCase()}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCopyTranscript}
+                    className="flex items-center gap-2 border border-[#CBD5D0] bg-white px-4 py-2.5 text-[14px] font-semibold text-[#315E55] transition hover:bg-[#F2F6F3]"
+                  >
+                    <SmallIcon type="copy" />
+                    Copy
+                  </button>
+
+                  <button
+                    onClick={handleDownloadTranscript}
+                    className="flex items-center gap-2 border border-[#CBD5D0] bg-white px-4 py-2.5 text-[14px] font-semibold text-[#315E55] transition hover:bg-[#F2F6F3]"
+                  >
+                    <SmallIcon type="download" />
+                    Download
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid lg:grid-cols-[1fr_300px]">
+                <div className="px-6 py-7 sm:px-8">
+                  <div className="whitespace-pre-wrap text-[16px] leading-8 text-[#334454]">
+                    {transcript}
+                  </div>
+                </div>
+
+                {segments.length > 0 && (
+                  <div className="border-t border-[#D9DDD8] bg-[#F8F9F6] px-6 py-6 lg:border-l lg:border-t-0">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#55796F]">
+                      Timeline
+                    </p>
+
+                    <div className="mt-4 max-h-[420px] space-y-4 overflow-y-auto pr-2">
+                      {segments.map((segment, index) => (
+                        <div
+                          key={`${segment.start}-${index}`}
+                          className="border-l-2 border-[#B8CCC5] pl-3"
+                        >
+                          <p className="text-[11px] font-semibold tracking-[0.06em] text-[#6B817B]">
+                            {formatTime(segment.start)}
+                            {" — "}
+                            {formatTime(segment.end)}
+                          </p>
+
+                          <p className="mt-1 text-[13px] leading-5 text-[#53636A]">
+                            {segment.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -472,7 +612,7 @@ export default function Home() {
 
               <button
                 onClick={handleBrowse}
-                disabled={isUploading}
+                disabled={isProcessing}
                 className="mt-7 rounded-[6px] bg-white px-6 py-3.5 text-[15px] font-semibold text-[#214943] transition hover:bg-[#EDF2EF] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Get started →
@@ -531,6 +671,14 @@ export default function Home() {
       />
     </main>
   );
+}
+
+function formatTime(seconds) {
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 function SimpleFeature({ title, description }) {
