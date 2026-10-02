@@ -389,3 +389,225 @@ def transcribe_audio(filename: str):
         "model": WHISPER_MODEL_NAME,
         "status": "transcribed",
     }
+# ---------------------------------------------------------
+# Complete media processing
+# ---------------------------------------------------------
+
+@app.post("/api/process")
+async def process_media(file: UploadFile = File(...)):
+    if not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="No file was selected.",
+        )
+
+    original_filename = Path(file.filename).name
+    file_extension = Path(original_filename).suffix.lower()
+
+    if file_extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported file format. "
+                "Supported formats are MP4, MOV, WEBM, AVI, MP3 and WAV."
+            ),
+        )
+
+    safe_filename = original_filename.replace(" ", "_")
+    destination = UPLOAD_DIR / safe_filename
+
+    # Avoid overwriting existing files.
+    if destination.exists():
+        stem = destination.stem
+        suffix = destination.suffix
+        counter = 1
+
+        while destination.exists():
+            destination = UPLOAD_DIR / f"{stem}_{counter}{suffix}"
+            counter += 1
+
+    total_size = 0
+
+    # -----------------------------------------------------
+    # 1. Save uploaded file
+    # -----------------------------------------------------
+
+    try:
+        with destination.open("wb") as buffer:
+            while True:
+                chunk = await file.read(1024 * 1024)
+
+                if not chunk:
+                    break
+
+                total_size += len(chunk)
+
+                if total_size > MAX_FILE_SIZE:
+                    buffer.close()
+
+                    if destination.exists():
+                        destination.unlink()
+
+                    raise HTTPException(
+                        status_code=413,
+                        detail="File is too large. Maximum allowed size is 500 MB.",
+                    )
+
+                buffer.write(chunk)
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        if destination.exists():
+            destination.unlink()
+
+        raise HTTPException(
+            status_code=500,
+            detail="The file could not be uploaded.",
+        ) from error
+
+    finally:
+        await file.close()
+
+    # -----------------------------------------------------
+    # 2. Determine audio source
+    # -----------------------------------------------------
+
+    if file_extension in {".mp3", ".wav"}:
+        audio_file = destination
+
+    else:
+        # -------------------------------------------------
+        # 3. Extract audio from video
+        # -------------------------------------------------
+
+        if not FFMPEG_PATH.exists():
+            if destination.exists():
+                destination.unlink()
+
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "FFmpeg was not found at "
+                    "C:\\ffmpeg\\bin\\ffmpeg.exe."
+                ),
+            )
+
+        output_filename = f"{destination.stem}.wav"
+        audio_file = EXTRACTED_AUDIO_DIR / output_filename
+
+        if audio_file.exists():
+            audio_file.unlink()
+
+        command = [
+            str(FFMPEG_PATH),
+            "-y",
+            "-i",
+            str(destination),
+            "-vn",
+            "-ac",
+            "1",
+            "-ar",
+            "16000",
+            "-c:a",
+            "pcm_s16le",
+            str(audio_file),
+        ]
+
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+
+        except subprocess.TimeoutExpired as error:
+            if audio_file.exists():
+                audio_file.unlink()
+
+            raise HTTPException(
+                status_code=504,
+                detail="Audio extraction timed out.",
+            ) from error
+
+        except Exception as error:
+            if audio_file.exists():
+                audio_file.unlink()
+
+            raise HTTPException(
+                status_code=500,
+                detail="Could not start FFmpeg.",
+            ) from error
+
+        if result.returncode != 0:
+            if audio_file.exists():
+                audio_file.unlink()
+
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "message": "FFmpeg could not extract audio.",
+                    "ffmpeg_error": result.stderr[-2000:],
+                },
+            )
+
+        if not audio_file.exists():
+            raise HTTPException(
+                status_code=500,
+                detail="Audio extraction completed, but no audio file was created.",
+            )
+
+    # -----------------------------------------------------
+    # 4. Transcribe audio
+    # -----------------------------------------------------
+
+    try:
+        segments, info = whisper_model.transcribe(
+            str(audio_file),
+            beam_size=5,
+        )
+
+        transcript_segments = []
+
+        for segment in segments:
+            transcript_segments.append(
+                {
+                    "start": round(segment.start, 2),
+                    "end": round(segment.end, 2),
+                    "text": segment.text.strip(),
+                }
+            )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail="Transcription failed.",
+        ) from error
+
+    transcript_text = " ".join(
+        segment["text"]
+        for segment in transcript_segments
+    )
+
+    # -----------------------------------------------------
+    # 5. Return complete result
+    # -----------------------------------------------------
+
+    return {
+        "message": "Media processed successfully.",
+        "original_filename": original_filename,
+        "uploaded_filename": destination.name,
+        "uploaded_size": total_size,
+        "audio_filename": audio_file.name,
+        "language": info.language,
+        "language_probability": round(
+            info.language_probability,
+            4,
+        ),
+        "transcript": transcript_text,
+        "segments": transcript_segments,
+        "model": WHISPER_MODEL_NAME,
+        "status": "completed",
+    }
