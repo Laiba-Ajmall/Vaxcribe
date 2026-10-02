@@ -3,6 +3,7 @@ import subprocess
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from faster_whisper import WhisperModel
 
 
 app = FastAPI(
@@ -46,6 +47,23 @@ EXTRACTED_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 # ---------------------------------------------------------
 
 FFMPEG_PATH = Path(r"C:\ffmpeg\bin\ffmpeg.exe")
+
+
+# ---------------------------------------------------------
+# Whisper configuration
+# ---------------------------------------------------------
+
+WHISPER_MODEL_NAME = "base"
+
+print("Loading Faster-Whisper model...")
+
+whisper_model = WhisperModel(
+    WHISPER_MODEL_NAME,
+    device="cpu",
+    compute_type="int8",
+)
+
+print("Faster-Whisper model loaded successfully.")
 
 
 # ---------------------------------------------------------
@@ -298,4 +316,76 @@ def extract_audio(filename: str):
         "sample_rate": 16000,
         "channels": 1,
         "status": "audio_extracted",
+    }
+
+
+# ---------------------------------------------------------
+# Speech-to-text transcription
+# ---------------------------------------------------------
+
+@app.post("/api/transcribe")
+def transcribe_audio(filename: str):
+    # Make sure the filename cannot escape the extracted_audio directory.
+    safe_filename = Path(filename).name
+
+    if not safe_filename:
+        raise HTTPException(
+            status_code=400,
+            detail="An audio filename is required.",
+        )
+
+    audio_file = EXTRACTED_AUDIO_DIR / safe_filename
+
+    if not audio_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Extracted audio file not found: {safe_filename}",
+        )
+
+    if not audio_file.is_file():
+        raise HTTPException(
+            status_code=400,
+            detail="The selected path is not a valid audio file.",
+        )
+
+    try:
+        segments, info = whisper_model.transcribe(
+            str(audio_file),
+            beam_size=5,
+        )
+
+        transcript_segments = []
+
+        for segment in segments:
+            transcript_segments.append(
+                {
+                    "start": round(segment.start, 2),
+                    "end": round(segment.end, 2),
+                    "text": segment.text.strip(),
+                }
+            )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail="Transcription failed.",
+        ) from error
+
+    transcript_text = " ".join(
+        segment["text"]
+        for segment in transcript_segments
+    )
+
+    return {
+        "message": "Transcription completed successfully.",
+        "audio_filename": safe_filename,
+        "language": info.language,
+        "language_probability": round(
+            info.language_probability,
+            4,
+        ),
+        "transcript": transcript_text,
+        "segments": transcript_segments,
+        "model": WHISPER_MODEL_NAME,
+        "status": "transcribed",
     }
